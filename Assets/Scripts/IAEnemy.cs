@@ -9,7 +9,8 @@ public class IAEnemy : MonoBehaviour
     enum State
     {
         Patrolling, 
-        Chasing
+        Chasing,
+        Searching
     }
     
     //Estado actual.
@@ -27,11 +28,20 @@ public class IAEnemy : MonoBehaviour
     //Tamaño del area.
     [SerializeField] Vector2 patrolAreaSize; 
 
-    //Detectar si nuestro personaje está en rago.
+    //Detectar si nuestro jugador está en rago.
     [SerializeField] float visionRange = 15; 
 
     //Controla el rango de visión de nuestra IA. 
     [SerializeField] float visionAngle = 90; 
+
+    //Detectar si el jugador se ha movido o no desde la última vez que lo ha visto. 
+    Vector3 lastTargetPosition;
+
+    float searchTimer;
+    //Tiempo que está patrullando por esa zona cuando deje de ver al jugador. 
+    [SerializeField] float searchWaitTime = 15;
+    //Zona de investigación creada cuando deje de ver al jugador.
+    [SerializeField] float searchRadius = 30;
 
     //Para asignar lo anterior.
     void Awake()
@@ -54,8 +64,13 @@ public class IAEnemy : MonoBehaviour
             case State.Patrolling:
                 Patrol();
             break;
+
             case State.Chasing:
                 Chase();
+            break;
+
+            case State.Searching:
+                Search();
             break;
         }
     }
@@ -84,7 +99,8 @@ public class IAEnemy : MonoBehaviour
         //Comprobación si el rango del personaje es falso.
         if (OnRange() == false)
         {
-            currentState = State.Patrolling;
+            searchTimer = 0;
+            currentState = State.Searching;
         }
     }
 
@@ -123,7 +139,23 @@ public class IAEnemy : MonoBehaviour
         //Me comprueba si estoy dentro del rango de visión, y del angúlo del campo visual.
         if(distanceToPlayer <= visionRange && angleToPlayer < visionAngle * 0.5f)
         {
-            return true;
+            //return true;
+            
+            //Detección del personaje. 
+            if(playerTransform.position == lastTargetPosition)
+            {
+                    return true;
+            }
+            
+            //Si el enemigo está dentro del campo de visión y ángulo del jugador, disparará un rayo hacia él. Si hay algo entremedio no. 
+            RaycastHit hit;
+            if(Physics.Raycast(transform.position, directionToPlayer, out hit, distanceToPlayer))
+            {
+                if(hit.collider.CompareTag("Player"))
+                {
+                    return true;
+                }
+            }
         }
         return false;
     }
@@ -146,5 +178,33 @@ public class IAEnemy : MonoBehaviour
         
         Gizmos.DrawLine(transform.position, transform.position + fovLine1);
         Gizmos.DrawLine(transform.position, transform.position + fovLine2);
+    }
+    
+    void Search()
+    {
+        //Si el jugador está dentro de la zona que el enmigo empiece a perseguirlo.
+        if (OnRange() == true)
+        {
+            currentState = State.Chasing;
+        }
+
+        //Cronómetro.
+        searchTimer += Time.deltaTime;
+
+        //El enemigo se dirige a la zona en la que se vió por última vez al jugador.
+        if(searchTimer < searchWaitTime)
+        {
+            if(enemyAgent.remainingDistance < 0.5f)
+            { 
+            Vector3 randomSearchPoint = lastTargetPosition + Random.insideUnitSphere * searchRadius;
+            randomSearchPoint.y = lastTargetPosition.y;
+            enemyAgent.destination = randomSearchPoint;
+            }
+        }
+        //Si no ocurre el enemigo directamente pasará al modo patrullar.
+        else
+        {
+            currentState = State.Patrolling;
+        }
     }
 }
