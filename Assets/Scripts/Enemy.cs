@@ -3,15 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class IAEnemy : MonoBehaviour
+public class Enemy : MonoBehaviour
 {
     // Para crear constantes numéricas pero escritas. Patrolling = 0, en vez de visualizar un 0, veremos el nombre.
     enum State
     {
         Patrolling, 
         Chasing,
-        Waiting,
-        Attacking
+        Searching
     }
     
     //Estado actual.
@@ -22,6 +21,9 @@ public class IAEnemy : MonoBehaviour
     
     //Almacenamiento posición del jugador, pàra saber que es lo que tiene que perseguir la IA.
     Transform playerTransform; 
+
+    // Centro de la zona donde patrullará nuestra inteligencia artificial. 
+    [SerializeField] Transform patrolAreaCenter;
 
     //Tamaño del area.
     [SerializeField] Vector2 patrolAreaSize; 
@@ -40,18 +42,6 @@ public class IAEnemy : MonoBehaviour
     [SerializeField] float searchWaitTime = 15;
     //Zona de investigación creada cuando deje de ver al jugador.
     [SerializeField] float searchRadius = 30;
-
-    //Almacenará todas las bases de patrulla.
-    [SerializeField] Transform[] patrolBases;
-    //Velocidad IA al dirigirse a la base.
-    [SerializeField] float velocity = 22f;
-    //Indicación a la IA.
-    private int currentBaseIndex =0;
-    //Tiempo de espera.
-    [SerializeField] float waitingTime = 5f;
-    [SerializeField] float attackRange = 2f;
-    [SerializeField] private float timeToAttack = 2.0f;
-    [SerializeField] private float timer = 0.0f;
 
     //Para asignar lo anterior.
     void Awake()
@@ -79,12 +69,8 @@ public class IAEnemy : MonoBehaviour
                 Chase();
             break;
 
-            case State.Waiting:
-                Wait();
-            break;
-
-            case State.Attacking:
-                Attack();
+            case State.Searching:
+                Search();
             break;
         }
     }
@@ -101,7 +87,7 @@ public class IAEnemy : MonoBehaviour
     //La IA detectará un punto aleatorio de la escena, una vez llegue a ese punto buscará otro.
         if(enemyAgent.remainingDistance < 0.5f)
         {
-            Patter();
+            SetRandomPoint();
         }
     }
 
@@ -114,61 +100,31 @@ public class IAEnemy : MonoBehaviour
         if (OnRange() == false)
         {
             searchTimer = 0;
+            currentState = State.Searching;
         }
     }
 
-    void Wait()
+    //Nos buscará un punto aleatorio del area enemiga.
+    void SetRandomPoint()
     {
-        StartCoroutine(DoWait());
-    }
+        float randomX = Random.Range(-patrolAreaSize.x / 2, patrolAreaSize.x / 2); 
+        float randomZ = Random.Range(-patrolAreaSize.y / 2, patrolAreaSize.y / 2);
+        Vector3 randomPoint = new Vector3(randomX, 0f, randomZ) + patrolAreaCenter.position;
 
-    System.Collections.IEnumerator DoWait()
-        {
-            yield return new WaitForSeconds(waitingTime);
-            currentState = State.Patrolling;
-        }
-
-    void Attack()
-    {
-        timer += Time.deltaTime;
-
-        if (timer > timeToAttack)
-        {
-            Debug.Log("Te he pegao");
-            timer = 0;
-        }
-        Debug.Log("Te he pegao");
-
-        currentState = State.Chasing;
-    }
-
-    //Para hacer que el enemigo vayda de un punto a otro y luego vuelva al inicial.
-    void Patter()
-    {
-       //Patrón de las bases.
-       Transform target = patrolBases[currentBaseIndex];
-       transform.position = Vector3.MoveTowards(transform.position, target.position, velocity * Time.deltaTime);
-
-        if (Vector3.Distance(transform.position, target.position) < 1f)
-        {
-            currentState = State.Waiting;
-            currentBaseIndex = (currentBaseIndex + 1) % patrolBases.Length;
-
-            if (currentBaseIndex == 3)
-            {
-                currentBaseIndex = 0;
-            }
-        }
-        
-        if(OnRange() == true)
-        {
-            currentState = State.Chasing;
-        }
+        enemyAgent.destination = randomPoint;
     }
 
     //Comprobar si el personaje está en rango.
     bool OnRange()
     {
+        //IA SIMPLE. Posición IA/Posición personaje. Nos mide la distancia que hay entre estos dos, una vez medida la comprueba. Añadiendo el ángulo de visión.
+        /*if(Vector3.Distance(transform.position, playerTransform.position) <= visionRange)
+        {
+            //Si estamos en rango que nos devuelva verdadero.
+            return true; 
+        }
+        //Si no estamos en rango/fuera de alcance que nos devuelva falso.
+        return false; */
         
         //Dirección en la qu eestá el jugador.
         Vector3 directionToPlayer = playerTransform.position - transform.position; 
@@ -202,6 +158,26 @@ public class IAEnemy : MonoBehaviour
             }
         }
         return false;
+    }
+
+    //Para poder ver el tamaño de esto.
+    void OnDrawGizmos()
+    {
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireCube(patrolAreaCenter.position, new Vector3 (patrolAreaSize.x, 0, patrolAreaSize.y));
+
+    //Para saber el rango de nuestra IA. 
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, visionRange);
+
+    //Para saber el rango de visión
+        Gizmos.color = Color.green;
+        
+        Vector3 fovLine1 = Quaternion.AngleAxis(visionAngle * 0.5f, transform.up) * transform.forward * visionRange; 
+        Vector3 fovLine2 = Quaternion.AngleAxis(-visionAngle * 0.5f, transform.up) * transform.forward * visionRange;
+        
+        Gizmos.DrawLine(transform.position, transform.position + fovLine1);
+        Gizmos.DrawLine(transform.position, transform.position + fovLine2);
     }
     
     void Search()
