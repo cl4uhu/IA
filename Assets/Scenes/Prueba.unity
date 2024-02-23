@@ -3580,7 +3580,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Size: {x: 4, y: 3, z: 4}
   m_Center: {x: 0, y: 1, z: 0}
-  m_Area: 3
+  m_Area: 0
   m_AffectedAgents: ffffffff
 --- !u!4 &365230456
 Transform:
@@ -4318,8 +4318,8 @@ MonoBehaviour:
   m_OverrideVoxelSize: 0
   m_VoxelSize: 0.16666667
   m_MinRegionArea: 2
-  m_NavMeshData: {fileID: 23800000, guid: 89a7ebf4c996e2d459a824b40704eac7, type: 2}
-  m_BuildHeightMesh: 1
+  m_NavMeshData: {fileID: 0}
+  m_BuildHeightMesh: 0
 --- !u!4 &630391126
 Transform:
   m_ObjectHideFlags: 0
@@ -4347,7 +4347,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_AgentTypeID: -1372625422
+  m_AgentTypeID: 0
   m_CollectObjects: 0
   m_Size: {x: 10, y: 10, z: 10}
   m_Center: {x: 0, y: 2, z: 0}
@@ -4356,15 +4356,15 @@ MonoBehaviour:
     m_Bits: 4294967295
   m_UseGeometry: 0
   m_DefaultArea: 0
-  m_GenerateLinks: 0
+  m_GenerateLinks: 1
   m_IgnoreNavMeshAgent: 1
   m_IgnoreNavMeshObstacle: 1
   m_OverrideTileSize: 0
   m_TileSize: 256
   m_OverrideVoxelSize: 0
-  m_VoxelSize: 0.5
+  m_VoxelSize: 0.16666667
   m_MinRegionArea: 2
-  m_NavMeshData: {fileID: 23800000, guid: 5e0641fa7aebccf47a6d7edbcbc4bcaf, type: 2}
+  m_NavMeshData: {fileID: 23800000, guid: 4fd9addaba536034fb4d57ae0b217be6, type: 2}
   m_BuildHeightMesh: 0
 --- !u!1 &654930495
 GameObject:
@@ -10468,7 +10468,7 @@ MonoBehaviour:
   m_EndPoint: {x: 0, y: 0, z: 2.5}
   m_Width: 0
   m_CostModifier: -1
-  m_Bidirectional: 0
+  m_Bidirectional: 1
   m_AutoUpdatePosition: 0
   m_Area: 0
 --- !u!4 &701105462
@@ -13889,10 +13889,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9366923843798bc4b88e1d3dff054851, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  patrolAreaCenter: {fileID: 1902016202}
   patrolAreaSize: {x: 20, y: 20}
   visionRange: 12
   visionAngle: 90
+  searchWaitTime: 15
+  searchRadius: 30
+  patrolBases: []
+  velocity: 22
+  waitingTime: 5
+  attackRange: 2
+  timeToAttack: 2
+  timer: 0
 --- !u!195 &1917191060
 NavMeshAgent:
   m_ObjectHideFlags: 0

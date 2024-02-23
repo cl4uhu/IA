@@ -12819,7 +12819,7 @@ GameObject:
   - component: {fileID: 1320300230}
   m_Layer: 0
   m_Name: RaycastCollider
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -14160,6 +14160,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9366923843798bc4b88e1d3dff054851, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  currentState: 0
   patrolAreaSize: {x: 0, y: 0}
   visionRange: 15
   visionAngle: 90
@@ -14170,6 +14171,10 @@ MonoBehaviour:
   - {fileID: 939861315}
   - {fileID: 1133758362}
   velocity: 3.5
+  waitingTime: 5
+  attackRange: 2
+  timeToAttack: 2
+  timer: 0
 --- !u!43 &2013972130
 Mesh:
   m_ObjectHideFlags: 0

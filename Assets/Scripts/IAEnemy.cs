@@ -6,7 +6,7 @@ using UnityEngine.AI;
 public class IAEnemy : MonoBehaviour
 {
     // Para crear constantes numéricas pero escritas. Patrolling = 0, en vez de visualizar un 0, veremos el nombre.
-    enum State
+   public enum State
     {
         Patrolling, 
         Chasing,
@@ -15,7 +15,7 @@ public class IAEnemy : MonoBehaviour
     }
     
     //Estado actual.
-    State currentState;
+    public State currentState;
 
     //Dar información para ir a x sitio.
     NavMeshAgent enemyAgent; 
@@ -50,8 +50,8 @@ public class IAEnemy : MonoBehaviour
     //Tiempo de espera.
     [SerializeField] float waitingTime = 5f;
     [SerializeField] float attackRange = 2f;
-    [SerializeField] private float timeToAttack = 2.0f;
-    [SerializeField] private float timer = 0.0f;
+    
+    bool waited = true;
 
     //Para asignar lo anterior.
     void Awake()
@@ -63,7 +63,10 @@ public class IAEnemy : MonoBehaviour
     void Start()
     {
        //Asignación de un estado por defecto para que empiece por este, siempre que queramos poner un estado deberemos escribir anteriormente "State".
+
+        Patter();
        currentState = State.Patrolling;  
+       
     }
 
     void Update()
@@ -101,7 +104,8 @@ public class IAEnemy : MonoBehaviour
     //La IA detectará un punto aleatorio de la escena, una vez llegue a ese punto buscará otro.
         if(enemyAgent.remainingDistance < 0.5f)
         {
-            Patter();
+            //Patter();
+            currentState = State.Waiting;
         }
     }
 
@@ -109,35 +113,50 @@ public class IAEnemy : MonoBehaviour
     void Chase()
     {
         enemyAgent.destination = playerTransform.position; 
+        
+         if (OnRange())
+        {
+          if (Vector3.Distance(transform.position, playerTransform.position) < attackRange)
+            {
+                currentState = State.Attacking;
+            }  
+        }
 
         //Comprobación si el rango del personaje es falso.
         if (OnRange() == false)
         {
-            searchTimer = 0;
+            currentState = State.Patrolling;
         }
     }
 
     void Wait()
     {
-        StartCoroutine(DoWait());
+        if(OnRange() == true)
+            {
+                currentState = State.Chasing;
+            }
+
+        if(waited == true)
+        {
+            StartCoroutine(DoWait());
+        }
+        
     }
 
     System.Collections.IEnumerator DoWait()
         {
+            waited = false;
             yield return new WaitForSeconds(waitingTime);
+            Patter();
             currentState = State.Patrolling;
+            waited = true;
         }
 
     void Attack()
     {
-        timer += Time.deltaTime;
-
-        if (timer > timeToAttack)
-        {
-            Debug.Log("Te he pegao");
-            timer = 0;
-        }
+        
         Debug.Log("Te he pegao");
+          
 
         currentState = State.Chasing;
     }
@@ -147,11 +166,12 @@ public class IAEnemy : MonoBehaviour
     {
        //Patrón de las bases.
        Transform target = patrolBases[currentBaseIndex];
-       transform.position = Vector3.MoveTowards(transform.position, target.position, velocity * Time.deltaTime);
+       //transform.position = Vector3.MoveTowards(transform.position, target.position, velocity * Time.deltaTime);
+       enemyAgent.destination = patrolBases[currentBaseIndex].position; 
 
         if (Vector3.Distance(transform.position, target.position) < 1f)
         {
-            currentState = State.Waiting;
+            //currentState = State.Waiting;
             currentBaseIndex = (currentBaseIndex + 1) % patrolBases.Length;
 
             if (currentBaseIndex == 3)
